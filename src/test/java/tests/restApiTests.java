@@ -8,6 +8,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.hamcrest.Matchers.is;
+import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 
 public class restApiTests {
     @BeforeEach
@@ -89,5 +90,20 @@ public class restApiTests {
                 .log().body()
                 .statusCode(200)
                 .body("job", is("Director"));
+    }
+    @Test
+    void checkListResource () {
+
+        given()
+                .log().uri()
+                .log().body()
+                .when()
+                .get("/unknown")
+                .then()
+                .log().status()
+                .log().body()
+                .statusCode(200)
+                .body(matchesJsonSchemaInClasspath("schemes/resource-list.json"))
+                .body("total", is(12));
     }
 }
