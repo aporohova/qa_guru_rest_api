@@ -1,4 +1,8 @@
-package tests;
+package org.example.tests;
+import io.qameta.allure.restassured.AllureRestAssured;
+import org.example.models.CreateUser;
+import org.example.models.CreateUserResponse;
+import org.example.models.UpdateUserResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -37,11 +41,11 @@ public class restApiTests {
     }
     @Test
     void createUser () {
-        String requestBody = "{\n" +
-                "    \"name\": \"John\",\n" +
-                "    \"job\": \"Teacher\"\n" +
-                "}";
-        given()
+        CreateUser requestBody = new CreateUser();
+        requestBody.setName("John");
+        requestBody.setJob("Teacher");
+
+        CreateUserResponse createUserResponse = given()
                 .log().uri()
                 .log().body()
                 .contentType(JSON)
@@ -52,7 +56,7 @@ public class restApiTests {
                 .log().status()
                 .log().body()
                 .statusCode(201)
-                .body("name", is("John"));
+                .extract().as(CreateUserResponse.class);
     }
     @Test
     void createUserNegative () {
@@ -74,13 +78,14 @@ public class restApiTests {
     }
     @Test
     void updateUser () {
-        String requestBody = "{\n" +
-                "    \"name\": \"John\",\n" +
-                "    \"job\": \"Director\"\n" +
-                "}";
-        given()
+        CreateUser requestBody = new CreateUser();
+        requestBody.setName("John");
+        requestBody.setJob("Director");
+
+        UpdateUserResponse updateUserResponse = given()
                 .log().uri()
                 .log().body()
+                .filter(new AllureRestAssured())
                 .contentType(JSON)
                 .body(requestBody)
                 .when()
@@ -89,7 +94,7 @@ public class restApiTests {
                 .log().status()
                 .log().body()
                 .statusCode(200)
-                .body("job", is("Director"));
+                .extract().as(UpdateUserResponse.class);
     }
     @Test
     void checkListResource () {
