@@ -5,8 +5,6 @@ import lombok.Data;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SingleUserResponse {
-    private SingleUser data;
+public class BadRequest {
+    private String error;
 }
-
-

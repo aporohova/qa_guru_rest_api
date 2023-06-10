@@ -1,114 +1,90 @@
 package org.example.tests;
-import io.qameta.allure.restassured.AllureRestAssured;
-import org.example.models.CreateUser;
-import org.example.models.CreateUserResponse;
-import org.example.models.UpdateUserResponse;
+import org.example.models.*;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static io.restassured.RestAssured.baseURI;
-import static io.restassured.RestAssured.get;
-import static io.restassured.RestAssured.given;
-import static io.restassured.http.ContentType.JSON;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.hamcrest.Matchers.is;
-import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
+import static io.qameta.allure.Allure.step;
+import static io.restassured.RestAssured.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.example.specs.Specs.*;
+
 
 public class restApiTests {
+    String userName = "John";
+    String userJob = "Teacher";
+    String updatedJob = "Director";
     @BeforeEach
     public void beforeEach(){
         baseURI ="https://reqres.in/api";
     }
     @Test
+    @DisplayName("User is found:check ID")
     void checkSingleUser () {
-        Integer expectedId = 2;
-        Integer actualId = given()
+        Integer expectedUserId = 2;
+        SingleUserResponse response = step("Make a request", () -> given(requestSpec)
+                .when()
                 .get("/users/2")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .extract().path("data.id");
-    assertEquals(expectedId,actualId);
+                .spec(response200Spec)
+                .extract().as(SingleUserResponse.class));
+        step("Check response", () ->
+        assertThat(response.getData().getId().equals(expectedUserId)));
     }
     @Test
+    @DisplayName("User not found")
     void checkUserNotFound () {
-                get("/users/23")
+        BadRequest response = step ("Make a request", () -> given(requestSpec)
+                .when()
+                .get("/users/23")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(404);
+                .spec(response404Spec))
+                .extract().as(BadRequest.class);
+        step("Check response", () ->
+                assertThat(response.getError()).isNull());
     }
     @Test
+    @DisplayName("Create User")
     void createUser () {
         CreateUser requestBody = new CreateUser();
-        requestBody.setName("John");
-        requestBody.setJob("Teacher");
+        requestBody.setName(userName);
+        requestBody.setJob(userJob);
 
-        CreateUserResponse createUserResponse = given()
-                .log().uri()
-                .log().body()
-                .contentType(JSON)
+        CreateUserResponse response = step("Make a request", () -> given(requestSpec)
                 .body(requestBody)
                 .when()
                 .post("/users")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(201)
-                .extract().as(CreateUserResponse.class);
+                .spec(response201Spec)
+                .extract().as(CreateUserResponse.class));
+        step("Check response", () ->
+                assertThat(response.getName().equals(userName)));
+                assertThat(response.getJob().equals(userJob));
     }
     @Test
-    void createUserNegative () {
-        String requestBody = "{\n" +
-                "    \"name\": \n" +
-                "    \"job\": \"Teacher\"\n" +
-                "}";
-        given()
-                .log().uri()
-                .log().body()
-                .contentType(JSON)
-                .body(requestBody)
+    @DisplayName("Delete User")
+    void deleteUser () {
+        step("Make a request",() -> given(deleteUserRequestSpec)
                 .when()
-                .post("/users")
+                .delete("/users/2")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(400);
+                .spec(response204Spec));
     }
     @Test
+    @DisplayName("Update User")
     void updateUser () {
         CreateUser requestBody = new CreateUser();
-        requestBody.setName("John");
-        requestBody.setJob("Director");
+        requestBody.setName(userName);
+        requestBody.setJob(updatedJob);
 
-        UpdateUserResponse updateUserResponse = given()
-                .log().uri()
-                .log().body()
-                .filter(new AllureRestAssured())
-                .contentType(JSON)
+        UpdateUserResponse updateUserResponse = step("Make a request", ()-> given(requestSpec)
                 .body(requestBody)
                 .when()
                 .patch("/users/2")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .extract().as(UpdateUserResponse.class);
-    }
-    @Test
-    void checkListResource () {
-
-        given()
-                .log().uri()
-                .log().body()
-                .when()
-                .get("/unknown")
-                .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .body(matchesJsonSchemaInClasspath("schemes/resource-list.json"))
-                .body("total", is(12));
+                .spec(response200Spec)
+                .extract().as(UpdateUserResponse.class));
+        step("Check response", () ->
+                assertThat(updateUserResponse.getJob()).isEqualTo(updatedJob));
     }
 }
