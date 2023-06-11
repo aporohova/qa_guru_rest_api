@@ -16,7 +16,8 @@ public class restApiTests {
     String updatedJob = "Director";
     @BeforeEach
     public void beforeEach(){
-        baseURI ="https://reqres.in/api";
+        baseURI ="https://reqres.in/";
+        basePath = "/api";
     }
     @Test
     @DisplayName("User is found:check ID")
@@ -57,9 +58,12 @@ public class restApiTests {
                 .then()
                 .spec(response201Spec)
                 .extract().as(CreateUserResponse.class));
-        step("Check response", () ->
-                assertThat(response.getName().equals(userName)));
-                assertThat(response.getJob().equals(userJob));
+        step("Check Name in response", () ->
+            assertThat(response.getName().equals(userName)));
+
+        step("Check Job in response", () ->
+            assertThat(response.getJob().equals(userJob)));
+
     }
     @Test
     @DisplayName("Delete User")
