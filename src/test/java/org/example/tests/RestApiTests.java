@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.example.specs.Specs.*;
 
 
-public class restApiTests {
+public class RestApiTests {
     String userName = "John";
     String userJob = "Teacher";
     String updatedJob = "Director";
